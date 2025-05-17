@@ -8,6 +8,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
  * Base
  */
 // Debug
+const debugObject = {}
 const gui = new GUI({
   width: 400,
 });
@@ -129,6 +130,12 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+debugObject.clearColor = '#201919'
+renderer.setClearColor(debugObject.clearColor)
+gui.addColor(debugObject, 'clearColor').onChange(value => {
+  renderer.setClearColor(value)
+})
 
 /**
  * Animate
