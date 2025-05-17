@@ -4,6 +4,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
+// Shaders
+import firefliesVertexShader from './shaders/fireflies/vertex.glsl';
+import firefliesFragmentShader from './shaders/fireflies/fragment.glsl';
+
 /**
  * Base
  */
@@ -81,6 +85,48 @@ gltfLoader.load('portal.glb', (gltf) => {
 });
 
 /**
+ * Fireflies
+ */
+// Geomtry
+const firefliesGeometry = new THREE.BufferGeometry();
+const firefliesCount = 30
+const positionArray = new Float32Array(firefliesCount * 3);
+// we provide 1 value of scale for each of the fireflies
+const scaleArray = new Float32Array(firefliesCount * 1);
+
+for (let i = 0; i < firefliesCount; i++) {
+  positionArray[i * 3] = (Math.random() - 0.5) * 4;
+  positionArray[i * 3 + 1] = Math.random() * 1.5;
+  positionArray[i * 3 + 2] = (Math.random() - 0.5) * 4;
+
+  scaleArray[i] = Math.random()
+}
+
+firefliesGeometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
+firefliesGeometry.setAttribute('aScale', new THREE.BufferAttribute(scaleArray, 1));
+
+// Material
+const firefliesMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+    uSize: { value: 100 },
+    uTime: { value: 0 },
+  },
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  vertexShader: firefliesVertexShader,
+  fragmentShader: firefliesFragmentShader,
+});
+
+gui.add(firefliesMaterial.uniforms.uSize, 'value', 0, 500).name('Fireflies size');
+
+// Points
+const fireflies = new THREE.Points(firefliesGeometry, firefliesMaterial);
+fireflies.position.set(0, 0, 0);
+scene.add(fireflies);
+
+/**
  * Sizes
  */
 const sizes = {
@@ -100,6 +146,9 @@ window.addEventListener('resize', () => {
   // Update renderer
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // Update fireflies
+  fireflies.material.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
 });
 
 /**
@@ -144,6 +193,9 @@ const clock = new THREE.Clock();
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+
+  // Update fireflies
+  fireflies.material.uniforms.uTime.value = elapsedTime;
 
   // Update controls
   controls.update();
